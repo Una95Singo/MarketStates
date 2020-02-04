@@ -4,8 +4,7 @@
 # viterbi function finds the optimal path given a matrix of K states over T time points
 
 
-
-#' @param D matrix of 
+#' @param D matrix of distances
 #' @param K number of states
 #' @param gamma temporal consistency parameter
 viterbi <- function(D, K, gamma) {
@@ -19,17 +18,13 @@ viterbi <- function(D, K, gamma) {
   FinalPath = NA
   
   PrevPath = list ()
-  PrevPath[[1]] = NA
-  PrevPath[[2]] = NA
-  PrevPath[[3]] = NA
-  PrevPath[[4]] = NA
-  
   CurrentPath = list()
-  CurrentPath[[1]] = NA
-  CurrentPath[[2]] = NA
-  CurrentPath[[3]] = NA
-  CurrentPath[[4]] = NA
   
+  for (i in 1:K){
+    PrevPath[[i]] = NA
+    CurrentPath[[i]] = NA
+  }
+
   # Viterbi loop
   for ( t in 1:Time){
     for (k in 1:K){
@@ -62,4 +57,16 @@ viterbi <- function(D, K, gamma) {
   return(list('Final_Path' = FinalPath, 'Final_Cost'= min(CurrentCost)))
 }
 
+
+
+# --- function test
+#data = read_excel("data/Test/viterbiDataset.xlsx")
+#D = data[, 2:5]
+#K = 4 
+#gamma = 400 
+
+
+
+#vit = viterbi(D=data[, 2:5], K=4, gamma=1)
+#vit
 
