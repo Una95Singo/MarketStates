@@ -1,0 +1,92 @@
+---
+title: "ASPC exploratory"
+output: html_notebook
+---
+# Horizontal Clustering
+The purpose of this notebook was to take a fisrt attempt at simulating timeseries using ASPC. This is a direct implemetation from the Noh Asatz equation:
+$$
+\xi_{i}(d)=\frac{\sqrt{g_{s_{i}}} \eta_{s_{i}}(d)+\epsilon_{i}(d)}{\sqrt{1+g_{s_{i}}}}
+$$
+
+where I simulate a timeseries of D=1000, 10 clusters each with size 50.
+
+```{r libraries}
+# libraries
+library(timeSeries)
+library(ape)
+library(Rcpp)
+library(umap)
+library(emstreeR)
+```
+
+
+```{r parameters}
+
+# cluster number
+C = 10 # number of clusters
+s = 50 # cluster size
+N = C*s # number of observations
+D = 72 # size of the dimesnion
+```
+
+
+```{r setup}
+
+
+# random effects 
+nu = matrix(rnorm(C*D), nrow = C, ncol =D)
+eps = matrix(rnorm(N*D), nrow = N, ncol =D)
+
+#spin labels 
+spinLabels = c(replicate(s,1), replicate(s,2),replicate(s,3), replicate(s,4), replicate(s,5), replicate(s,6), replicate(s,7), replicate(s,8), replicate(s,9), replicate(s,10))
+
+# fix intra-cluster binding strength
+gs = numeric(C)+1
+
+# daily returns
+xi =  matrix(NA, nrow = N, ncol =D)
+
+```
+
+
+```{r simulate}
+# double for loop for simualation
+for (n in 1:N){
+    for (day in 1:D){
+      cluster = spinLabels[n]
+      xi[n, day] = (sqrt(gs[cluster]) * nu[cluster, day] + eps[n, day])/(sqrt(1+gs[cluster]))
+    }
+}
+```
+
+
+# visualisation
+
+```{r viz1}
+
+# timeseries plots. 
+xi.ts = ts(t((xi)), start=c(2009, 1), end=c(2014, 12), frequency = 12)
+ts.plot(xi.ts, plot.type ='single', col = spinLabels)
+
+```
+
+```{r viz2}
+# timeseries plots. 
+xi.cummulative = ts(colCumsums(xi.ts), start=c(2009, 1), end=c(2014, 12), frequency = 12)
+ts.plot(xi.cummulative, plot.type ='single', col = spinLabels, main ='Cummulative Sum')
+```
+
+```{r viz3}
+# minimum spanning tree plots.
+MST = ComputeMST(xi)
+plot.MST(MST, col.pts =spinLabels, cex=1.5, main='MST')
+```
+
+# Vertical (State) Clustering
+
+Below I attempt to simulate state-dependent clustering.
+```{r}
+
+```
+
+
