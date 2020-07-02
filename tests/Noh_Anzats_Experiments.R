@@ -99,7 +99,7 @@ plotter.states(spinLabels, title = 'Spin Labels viz.', thickness = 4)
 # stochastic class labels
 # test 1 - 2 state markov model
 par(mfrow =  c(1,1))
-Transitions = matrix(c(0.95,0.05,0.02,0.98), nrow = 2, ncol = 2 ,byrow = T )
+Transitions = matrix(c(0.99,0.01,0.01,0.99), nrow = 2, ncol = 2 ,byrow = T )
 plotter.transitions(Transitions, 10, 'probability transition matrix')
 par(mfrow =  c(1,1))
 spinLabels = simulate.markov_states(Transition_Matrix = Transitions,Time =  N, startingState = 1)

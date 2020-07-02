@@ -137,7 +137,7 @@ plotter.series(colMeans(returns),simulated, S0=NA, 'Stock Returns')
 
 # find states
 par(mfrow = c(1,1))
-seg.results = segmentation.procedure(returns =returns, Time = 100, gamma=0.0015, iters =50, K = 2 )
+seg.results = segmentation.procedure(returns =returns, Time = 100, gamma=0.001, iters = 100, K = 2 , sparse = 1)
 plot(y=seg.results$history$metric, x =1:length(seg.results$history$metric), main = 'history', type ='l', xlab = 'iterations', ylab  = 'dist')
 
 minIndex = which(seg.results$history$metric ==min(seg.results$history$metric))

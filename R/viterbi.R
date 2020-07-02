@@ -4,10 +4,10 @@
 # viterbi function finds the optimal path given a matrix of K states over T time points
 
 
-#' @param D matrix of distances
-#' @param K number of states
-#' @param gamma temporal consistency parameter
-viterbi <- function(D, K, gamma) {
+viterbi <- function(D, K, gamma, viz = F) {
+  #' @param D matrix of distances for each ith observation
+  #' @param K number of states
+  #' @param gamma temporal consistency parameter
   Time = nrow(D)
   
   # initialize
@@ -39,8 +39,7 @@ viterbi <- function(D, K, gamma) {
         CurrentCost = unlist(CurrentCost)
         CurrentPath[[k]] = c(PrevPath[[MinVal]], k) 
       }
-      
-      
+
     }
     #update after iterating throuh the states. the paper updates before the state ends.
     PrevCost = CurrentCost

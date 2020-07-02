@@ -43,7 +43,7 @@ plotter.series = function(series, states, S0 = NA, title =""){
     lines(series, col='Black', lwd=1.25)
   }
   else{
-    series = c(S0, S0*cumsum(series)) # convert returns to prices
+    series = c(cumsum(series)) # convert returns to prices
     Min = min(series)
     Max = max(series)
     Time = length(series)

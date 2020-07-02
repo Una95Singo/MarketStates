@@ -6,11 +6,12 @@
 source('R/viterbi.R')
 source('R/plotter.R')
 source('R/simulate.R')
+library('NetworkToolbox')
 
 
 #' segmentation procedure
-#' @param  returns matrix of reutrns
-#' @param  K number of states
+#' @param returns matrix of reutrns stocks by time
+#' @param K number of states
 #' @param Time Time horizon of the dataset
 #' @param Sparse type of sparsifiation method
 #' @param dist which distance metric to use
@@ -36,13 +37,13 @@ set.seed(1)
 #seg.results$history$`iter: 31 states`
 #simulated
 
-#Time = 130 
-#gamma=0.001
+#Time = 1258 
+#gamma=Gamma[10]
 #iters =10
-#K = 3
-#sparse = 1
+#K = 2
+#sparse = 2
 #dist = 1
-
+#returns = t(GRet)
 
 
 segmentation.procedure  = function(returns, Time, iters = 1, gamma = 1, sparse = 1, dist = 1, K){
@@ -68,14 +69,14 @@ segmentation.procedure  = function(returns, Time, iters = 1, gamma = 1, sparse =
     # compute precision
     seg.current[[paste('precision', state)]] = switch(sparse, 
                                                       cov(t(temp.sample)), # full precision
-                                                      cov(t(temp.sample)), # Tringle
+                                                      LoGo(cov(t(temp.sample)), partial = F),#cov(t(temp.sample)), # Tringle
                                                       cov(t(temp.sample))) #Glasso 
     # compute D (distance matrix)
     seg.current[['distance']][state,] = switch(dist,
                                                diag(t(returns - c(seg.current[[paste('mu', state)]])) %*% seg.current[[paste('precision', state)]] %*% (returns - c(seg.current[[paste('mu', state)]]))), #mahalanobis distance
                                                1, # euclidian distance
                                                1  # exponential family lilkihood
-                                               )
+    )
     
   }
   
@@ -83,28 +84,28 @@ segmentation.procedure  = function(returns, Time, iters = 1, gamma = 1, sparse =
   plotter.states(seg.current$states, title = paste('iteration:', 0))
   iter_count = 0
   for ( iter in 1:iters){
-  #---------------------
-  # E-Step -------------
-  #---------------------
+    #---------------------
+    # E-Step -------------
+    #---------------------
     temp.viterbi = viterbi(D=t(seg.current$distance), K=K, gamma=gamma)
     temp.unique = length(unique(temp.viterbi$Final_Path))
     
     # plotpoint
     #plotter.states(temp.viterbi$Final_Path, title = paste('iteration:', iter))
-  
-  #---------------------
-  # M-Step -------------
-  #---------------------
+    
+    #---------------------
+    # M-Step -------------
+    #---------------------
     
     if (temp.unique != K ){ #resuffle
       # store history-----
       #seg.history[['metric']] = c(seg.history[['metric']],temp.viterbi$Final_Cost)
       #seg.history[[paste('iter:',iter,'states')]] = seg.current$states
       #for (state in 1:K){
-        # compute mu vector
+      # compute mu vector
       #  seg.history[[paste('iter:', iter, 'mu', state)]] = seg.current[[paste('mu', state)]]
       #  seg.history[[paste('iter:', iter, 'precision', state)]] = seg.current[[paste('precision', state)]]
-        
+      
       #}
       
       # randomly assign each multivariate observation to a state
@@ -120,14 +121,14 @@ segmentation.procedure  = function(returns, Time, iters = 1, gamma = 1, sparse =
         # compute precision
         seg.current[[paste('precision', state)]] = switch(sparse, 
                                                           cov(t(temp.sample)), # full precision
-                                                          cov(t(temp.sample)), # Tringle
+                                                          LoGo(cov(t(temp.sample)), partial = F),#cov(t(temp.sample)), # Tringle
                                                           cov(t(temp.sample))) #Glasso 
         # compute D (distance matrix)
         seg.current[['distance']][state,] = switch(dist,
                                                    diag(t(returns - c(seg.current[[paste('mu', state)]])) %*% seg.current[[paste('precision', state)]] %*% (returns - c(seg.current[[paste('mu', state)]]))), #mahalanobis distance
                                                    1, # euclidian distance
                                                    1  # exponential family lilkihood
-                                                   )
+        )
       }
     }
     else{
@@ -157,7 +158,7 @@ segmentation.procedure  = function(returns, Time, iters = 1, gamma = 1, sparse =
         # compute precision
         seg.current[[paste('precision', state)]] = switch(sparse, 
                                                           cov(t(temp.sample)), # full precision
-                                                          cov(t(temp.sample)), # Tringle
+                                                          LoGo(cov(t(temp.sample)), partial = F),#cov(t(temp.sample)), # Tringle
                                                           cov(t(temp.sample))) #Glasso 
         # compute D (distance matrix)
         seg.current[['distance']][state,] = switch(dist,
@@ -167,13 +168,12 @@ segmentation.procedure  = function(returns, Time, iters = 1, gamma = 1, sparse =
         )
         
       }
-    
+      
       # plotpoint
       #plotter.states(seg.current$states, title = paste('iteration:', iter))
     }
   }
   return( list('history' = seg.history, 'current' = seg.current))
 }
-
 
 

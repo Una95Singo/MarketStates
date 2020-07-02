@@ -1,0 +1,132 @@
+# EM testing
+
+# ICC replication
+# una singo, SNGUNA003
+# 9 June 2020
+
+# import R functions ------------
+source("R/plotter.R")
+source("R/simulate.R")
+source("R/ICC.R")
+source("R/simulate.R")
+
+# libraries ---------------------
+library(readxl)
+library(MASS)
+library(fossil)
+library(tidyverse)
+library(lubridate)
+library(NetworkToolbox)
+library(huge)
+library(xts)
+library(corrplot)
+library(PerformanceAnalytics)
+library(timeSeries)
+library(xts)
+
+
+# helper functions -----
+
+naSums = function(x){sum(is.na(x))}
+
+set.seed(1)
+
+# SnP 500 data clean -------------------------------------
+allStocks = read_csv(file ="data/sandp500/all_stocks_5yr.csv")
+allStocks = allStocks  %>% select(date, close, Name)
+flatStocks = allStocks %>% spread(key = Name, value = close, fill = NA ) # explode matrix
+survivorStocks =  flatStocks %>% select_if(apply(flatStocks,naSums, MARGIN = 2) == 0) # removed stocks that did not trade in the whole period
+# move this to a new document
+#log returns
+smaller = sample(2:400, size = 100)
+GRet = survivorStocks[, c(1,smaller)]
+Ret.dates = GRet[,1]
+GRet = GRet[,-1]
+GRet = diff(as.matrix(log(GRet)))
+colnames(GRet)
+
+# test variables
+
+#hist(abs(diag((GRet - colMeans(GRet)) %*% (LoGo(GRet)) %*% t(GRet- colMeans(GRet)))), xlab = 'distance', main ='Distribution of Mahalanobis distance')
+
+dim(GRet)
+par(mfrow = c(1,1))
+plot(1:1258, y =(100*cumsum(colMeans(t(GRet))) + 100) , type='l', ylab = 'cummulative return', xlab = 'time', main ='SnP 500 sample return')
+
+
+returnsMatrix = t(GRet)
+gamma = 0
+sparseMethod = 1
+distanceFunction = 1 
+K =3
+
+
+
+trace(print)
+Time = ncol(returnsMatrix)
+optimalViterbi = NA
+optimalStateNum = 0
+iters = 0
+max.it = 50 
+stop.crit = -0.01
+ds = NA
+d.hist= c()
+#initial
+states.est = ICC.shuffle(K = K, Time = Time)
+for (it in 1:max.it){
+  # E - step 
+  theta.est = ICC.thetaEst(K = K, returns = returnsMatrix, stateSeq = states.est, sparse = sparseMethod)
+  distance.est = ICC.distance(returns = returnsMatrix, dist = distanceFunction, theta = theta.est, K = K)
+  par(mfrow = c(1,1))
+  plot(y = distance.est[1,], x = 1:Time, type='l', col = 'red')
+  lines(y = distance.est[2,], x = 1:Time, col = 'blue')
+  # M - step
+  optimalViterbi = viterbi(D = t(distance.est), K=K, gamma=gamma)
+  d.hist = c(d.hist, optimalViterbi$Final_Cost)
+  states.est = optimalViterbi$Final_Path
+  print(d.hist[length(d.hist)])
+  if (it == 1 ){
+    next
+  }
+  ds = diff(d.hist)
+  ds = ds[length(ds)]
+  if( ds > stop.crit){
+    print('convergence')
+    plot(y = d.hist, x = 1:it, type ='l')
+    break
+  }
+}
+
+
+
+FinalPath = optimalViterbi$Final_Path
+# visualise identified path
+plotter.series(colMeans(t(GRet)),FinalPath
+               , title = paste('Optimal market states, gamma:', gamma), S0 = 100)
+
+#Visualise states
+State1 = which(FinalPath == 1)
+par(mfrow=c(2,2))
+# state 1
+plot(colMeans(GRet[State1,]), type ='h', ylab='Mu', col ='red', lwd=2, main='mean stock return', ylim = c(-0.01, 0.01))
+plot(apply(GRet[State1,], MARGIN = 2, FUN = sd), type ='h', ylab='Sigma', col ='red', lwd=2, main='standard dev')
+#state 2
+plot(colMeans(GRet[-State1,]), type ='h', ylab='Mu', col ='blue', lwd=2, ylim= c(-0.01, 0.01))
+plot(apply(GRet[-State1,], MARGIN = 2, FUN = sd), type ='h', ylab='Sigma', col ='blue', lwd=2)
+
+# Sharpe ratios
+par(mfrow=c(1,1))
+
+data <- GRet
+dates <-seq(as.Date("2013-02-09"), length = 1258, by = "days")
+Close <- xts(x = data, order.by = dates)
+
+
+plot(c(SharpeRatio.annualized(Close[State1,])), type ='h', ylab='Mu', col ='red', lwd=2, main='Sharpe ratios')
+lines(c(SharpeRatio.annualized(Close[-State1,])), type ='h', ylab='Mu', col ='blue', lwd=2)
+
+
+plot(x = colMeans(GRet[State1,]), y=apply(GRet[State1,], MARGIN = 2, FUN = sd), xlab='mu', ylab='sd', pch =19, col='red' )
+points(x = colMeans(GRet[-State1,]), y=apply(GRet[-State1,], MARGIN = 2, FUN = sd), xlab='mu', ylab='sd', pch = 22, col ='blue')
+
+
