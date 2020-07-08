@@ -7,11 +7,11 @@ source('R/viterbi.R')
 library('NetworkToolbox')
 library('Matrix')
 
-#returnsMatrix = returns
-#gamma = 0
-#sparseMethod = 1
-#distanceFunction = 1
-#K =2
+returnsMatrix = t(GRet)
+gamma = 0
+sparseMethod = 2
+distanceFunction = 1
+K =2
 
 #returnsMatrix = t(GRet)
 #gamma = 0.05
@@ -36,7 +36,7 @@ ICC.cluster  = function(returnsMatrix, gamma = 1, sparseMethod = 1, distanceFunc
   optimalStateNum = 0
   iters = 0
   max.it = max.iters
-  stop.crit = -0.005
+  stop.crit = 0.0001
   ds = NA
   d.hist= c()
   #initial
@@ -59,12 +59,12 @@ ICC.cluster  = function(returnsMatrix, gamma = 1, sparseMethod = 1, distanceFunc
       #print(states.est)
       break
     }
-    print(paste('Distance after iteration', it ,':', d.hist[length(d.hist)] ))
+    print(paste('Distance after iteration', it ,':', d.hist[length(d.hist)]))
     if (it == 1 ){
       next
     }
     ds = diff(d.hist)
-    ds = ds[length(ds)]
+    ds = ds[length(ds)] / d.hist[length(d.hist)-1]
     if( abs(ds) < abs(stop.crit)){
       print('convergence')
       plot(y = d.hist, x = 1:it, type ='l', main = 'Distance history')
@@ -72,7 +72,6 @@ ICC.cluster  = function(returnsMatrix, gamma = 1, sparseMethod = 1, distanceFunc
     }
   }
   
-
   return( list('OptimalViterbi' = optimalViterbi, 'OptimalPath' = optimalViterbi$Final_Path,  'ThetaEst' = theta.est))
 }
 

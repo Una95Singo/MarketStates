@@ -34,7 +34,7 @@ flatStocks = allStocks %>% spread(key = Name, value = close, fill = NA ) # explo
 survivorStocks =  flatStocks %>% select_if(apply(flatStocks,naSums, MARGIN = 2) == 0) # removed stocks that did not trade in the whole period
 
 # generate dataset
-max.iterations = 1
+max.iterations = 10
 DataSet = matrix (NA, nrow = (nrow(survivorStocks)-1), ncol =(100*max.iterations))
 for (i in 1:max.iterations){
   smaller = sample(2:400, size = 100)
@@ -45,7 +45,7 @@ for (i in 1:max.iterations){
 
 
 
-Gamma = seq(from = 0, to = 50, by = 0.5)
+Gamma = seq(from = 0, to = 30, by = 2)
 
 history.distance = matrix(NA, nrow = max.iterations, ncol = length(Gamma))
 sparseMethod = 2
@@ -62,81 +62,51 @@ for (i in 1:ncol(history.distance)){
   }
 }
 
-ICC.Output = ICC.cluster(returnsMatrix = t(GRet), sparseMethod = sparseMethod, gamma = 24.5, K = K, max.iters = 30)
+
+# 1. Open jpeg file
+jpeg("images/GridSearchPlot.jpg", width = 350, height = 350)
+#2. plot grid search results
+plot(spline(y = colMeans(history.distance), x = Gamma), type ='l', ylab = 'Average cost distance', xlab = 'Gamma', main = 'Grid search error')
+# 3. Close the file
+dev.off()
+
+
+# gamma 24
+
+smaller = sample(2:400, size = 100)
+GRet = survivorStocks[, c(smaller)]
+GRet = diff(as.matrix(log(GRet)))
+ICC.Output = ICC.cluster(returnsMatrix = t(GRet), sparseMethod = sparseMethod, gamma = 24, K = K, max.iters = 30)
 ICC.Output$OptimalViterbi$Final_Cost
-# history variables
-# 1 - ICC Full gamma = 0 
-# 2 - ICC Sparse gamma = 0 
-# 1 - ICC Full gamma = optimal
-# 1 - ICC Sparse gamma = optimal
-history.switches = matrix(NA, nrow = 4, ncol = max.iterations)
-history.segments = matrix(NA, nrow = 4, ncol = max.iterations)
 
-
-# Experiment 1 - ICC Full gamma = 0 -----------------
-
-for( i in 1:max.iterations){
-  lower = i*100 - 99
-  upper = i*100
-  
-  
-  
-  
-}
-
-
-# Experiment 2 - ICC Full gamma = 0
-
-# Experiment 3 - ICC Full gamma = 0
-#hist(abs(diag((GRet - colMeans(GRet)) %*% (LoGo(GRet)) %*% t(GRet- colMeans(GRet)))), xlab = 'distance', main ='Distribution of Mahalanobis distance')
-
-dim(GRet)
-par(mfrow = c(1,1))
-plot(1:1258, y =(100*cumsum(colMeans(t(GRet))) + 100) , type='l', ylab = 'cummulative return', xlab = 'time', main ='SnP 500 sample return')
-
-
-# ICC setup
-gamma = 0
-sparseMethod = 2
-distanceFunction = 1 
-K =2
-
-
-ICC.Output = ICC.cluster(returnsMatrix = t(GRet), sparseMethod = sparseMethod, gamma = gamma, K = K, max.iters = 100)
 
 FinalPath = ICC.Output$OptimalPath
 Number.switches = sum(diff(FinalPath) != 0)
 Number.switches
+
+# 1. Open jpeg file
+jpeg("images/Gamma24.jpg", width = 350, height = 350)
+#2. plot grid search results
 # visualise identified path
 plotter.series(colMeans(t(GRet)),FinalPath
-               , title = paste('Optimal market states, gamma:', gamma), S0 = 100)
-
-#Visualise states
-State1 = which(FinalPath == 1)
-par(mfrow=c(2,2))
-# state 1
-plot(colMeans(GRet[State1,]), type ='h', ylab='Mu', col ='red', lwd=2, main='mean stock return', ylim = c(-0.001, 0.001))
-plot(apply(GRet[State1,], MARGIN = 2, FUN = sd), type ='h', ylab='Sigma', col ='red', lwd=2, main='standard dev')
-#state 2
-plot(colMeans(GRet[-State1,]), type ='h', ylab='Mu', col ='blue', lwd=2, ylim= c(-0.001, 0.001))
-plot(apply(GRet[-State1,], MARGIN = 2, FUN = sd), type ='h', ylab='Sigma', col ='blue', lwd=2)
-
-# Sharpe ratios
-par(mfrow=c(1,1))
-
-data <- GRet
-dates <-seq(as.Date("2013-02-09"), length = 1258, by = "days")
-Close <- xts(x = data, order.by = dates)
+               , title = paste('Optimal market states, gamma:', '24'), S0 = 100)
+# 3. Close the file
+dev.off()
 
 
-plot(c(SharpeRatio.annualized(Close[State1,])), type ='h', ylab='Mu', col ='red', lwd=2, main='Sharpe ratios', ylim = c(2, -2))
-lines(c(SharpeRatio.annualized(Close[-State1,])), type ='h', ylab='Mu', col ='blue', lwd=2)
-
-plot(x = colMeans(GRet), y=apply(GRet, MARGIN = 2, FUN = sd), xlab='mu', ylab='sd', pch =19, col='red' , xlim = c(-0.02, 0.02), ylim = c(0, 0.03))
-plot(x = colMeans(GRet[State1,]), y=apply(GRet[State1,], MARGIN = 2, FUN = sd), xlab='mu', ylab='sd', pch =19, col='red' , xlim = c(-0.02, 0.02), ylim = c(0, 0.03))
-points(x = colMeans(GRet[-State1,]), y=apply(GRet[-State1,], MARGIN = 2, FUN = sd), xlab='mu', ylab='sd', pch = 22, col ='blue')
+ICC.Output = ICC.cluster(returnsMatrix = t(GRet), sparseMethod = sparseMethod, gamma = 5, K = K, max.iters = 30)
+ICC.Output$OptimalViterbi$Final_Cost
 
 
+FinalPath = ICC.Output$OptimalPath
+Number.switches = sum(diff(FinalPath) != 0)
+Number.switches
 
-
-
+# 1. Open jpeg file
+jpeg("images/Gamma5.jpg", width = 350, height = 350)
+#2. plot grid search results
+# visualise identified path
+plotter.series(colMeans(t(GRet)),FinalPath
+               , title = paste('Optimal market states, gamma:', '5'), S0 = 100)
+# 3. Close the file
+dev.off()
