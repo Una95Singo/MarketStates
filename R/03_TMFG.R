@@ -22,7 +22,7 @@ library(igraph)
 TMFG.filter = function(W){
   N = nrow(W)
   if (N < 9) { print('W Matrix too small') }
-  if (any(W<0)) { print('W Matrix has negative elements')}
+  #if (any(W<0)) { print('W Matrix has negative elements')}
   
   A = matrix(0, nrow = N, ncol = N) # initialise adjacency matrix
   in_v = matrix(0, nrow = N, ncol = 1) # initialise list of inserted vertices

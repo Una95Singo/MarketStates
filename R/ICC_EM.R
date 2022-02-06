@@ -7,11 +7,11 @@ source('R/viterbi.R')
 library('NetworkToolbox')
 library('Matrix')
 
-returnsMatrix = t(GRet)
-gamma = 0
-sparseMethod = 2
-distanceFunction = 1
-K =2
+#returnsMatrix = t(GRet)
+#gamma = 24
+#sparseMethod = 2
+#distanceFunction = 1
+#K =2
 
 #returnsMatrix = t(GRet)
 #gamma = 0.05
@@ -36,7 +36,7 @@ ICC.cluster  = function(returnsMatrix, gamma = 1, sparseMethod = 1, distanceFunc
   optimalStateNum = 0
   iters = 0
   max.it = max.iters
-  stop.crit = 0.0001
+  stop.crit = 0.00001
   ds = NA
   d.hist= c()
   #initial
@@ -99,7 +99,7 @@ ICC.thetaEst = function(K=2, returns = matrix(runif(250), 5, 10), stateSeq = c(1
     # compute precision
     thetaEsta.precision[[state]] = switch(sparse,
                                 solve(cov(t(temp.sample))), # full precision
-                                LoGo(cov(t(temp.sample)), na.data = 'none', partial = F), #cov(t(temp.sample)), # Tringle
+                                LoGo(cov(t(temp.sample)) , na.data = 'none', partial = F), #cov(t(temp.sample)), # Tringle
                                 cov(t(temp.sample))) #Glasso 
   }
   return(list('mu' = thetaEsta.mu ,  'precision' = thetaEsta.precision))

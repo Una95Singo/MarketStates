@@ -35,7 +35,7 @@ plotter.series = function(series, states, S0 = NA, title =""){
          xlab = 'Time', ylab ='Returns')
     
     K = length(unique(states))
-    Colours = topo.colors(K)
+    Colours = c("#4C00FFFF", "#00E5FFFF", 'red', 'green' )
     Colours = alpha(Colours, alpha = 0.3)
     for (i in 1:(K)){
       rect(which(states==i)-0.5, Min, which(states==i)+0.5, Max,  col=Colours[i], border =NA )
@@ -43,7 +43,7 @@ plotter.series = function(series, states, S0 = NA, title =""){
     lines(series, col='Black', lwd=1.25)
   }
   else{
-    series = c(cumsum(series)) # convert returns to prices
+    series = S0*c(cumsum(series))+S0 # convert returns to prices
     Min = min(series)
     Max = max(series)
     Time = length(series)
@@ -52,7 +52,7 @@ plotter.series = function(series, states, S0 = NA, title =""){
          main = title, 
          xlab = 'Time', ylab ='Returns')
     K = length(unique(states))
-    Colours = topo.colors(K)
+    Colours = c("#4C00FFFF", "#00E5FFFF", 'red', 'green' )
     Colours = alpha(Colours, alpha = 0.3)
     for (i in 1:(K)){
       rect(which(states==i)-0.5, Min, which(states==i)+0.5, Max,  col=Colours[i], border =NA )

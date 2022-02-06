@@ -21,7 +21,7 @@
 
 
 source('R/03_TMFG.R')
-LoGo = function(S, separators = NULL , cliques = NULL){
+LoGo.solve = function(S, separators = NULL , cliques = NULL){
   
   if ( is.null(separators) || is.null(cliques) ){
     tmfg = TMFG.filter(S)

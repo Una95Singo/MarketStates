@@ -5,8 +5,8 @@
 # import R functions ------------
 source("R/plotter.R")
 source("R/simulate.R")
-source("R/ICC_EM.R")
-source("R/simulate.R")
+source("R/05_ICC.R")
+
 
 # libraries ---------------------
 library(readxl)
@@ -14,7 +14,7 @@ library(MASS)
 library(fossil)
 library(tidyverse)
 library(lubridate)
-library(NetworkToolbox)
+#library(NetworkToolbox)
 #library(huge)
 library(xts)
 #library(corrplot)
@@ -25,7 +25,6 @@ library(PerformanceAnalytics)
 # helper functions -----
 naSums = function(x){sum(is.na(x))}
 
-set.seed(5)
 
 # SnP 500 data clean -------------------------------------
 allStocks = read_csv(file ="data/sandp500/all_stocks_5yr.csv")
@@ -34,7 +33,7 @@ flatStocks = allStocks %>% spread(key = Name, value = close, fill = NA ) # explo
 survivorStocks =  flatStocks %>% select_if(apply(flatStocks,naSums, MARGIN = 2) == 0) # removed stocks that did not trade in the whole period
 
 # generate dataset
-max.iterations = 10
+max.iterations = 5
 DataSet = matrix (NA, nrow = (nrow(survivorStocks)-1), ncol =(100*max.iterations))
 for (i in 1:max.iterations){
   smaller = sample(2:400, size = 100)
@@ -45,7 +44,7 @@ for (i in 1:max.iterations){
 
 
 
-Gamma = seq(from = 0, to = 30, by = 2)
+Gamma = seq(from = 0, to = 50, by = 2)
 
 history.distance = matrix(NA, nrow = max.iterations, ncol = length(Gamma))
 sparseMethod = 2
@@ -66,7 +65,7 @@ for (i in 1:ncol(history.distance)){
 # 1. Open jpeg file
 jpeg("images/GridSearchPlot.jpg", width = 350, height = 350)
 #2. plot grid search results
-plot(spline(y = colMeans(history.distance), x = Gamma), type ='l', ylab = 'Average cost distance', xlab = 'Gamma', main = 'Grid search error')
+plot(spline(y = colMeans(history.distance[,1:17]), x = Gamma[1:17]), type ='l', ylab = 'Average cost distance', xlab = 'Gamma', main = 'Grid search error')
 # 3. Close the file
 dev.off()
 
